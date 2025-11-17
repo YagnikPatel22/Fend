@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Basic LinSync Client</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+        }
+        .box {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            width: 400px;
+        }
+        input, button {
+            margin: 5px 0;
+            padding: 6px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Basic LinSync Client</h2>
+
+<!-- Upload -->
+<div class="box">
+    <h3>Upload File</h3>
+    <input type="file" id="uploadFile"><br>
+    <button onclick="upload()">Upload</button>
+    <p id="uploadStatus"></p>
+</div>
+
+<!-- List -->
+<div class="box">
+    <h3>Your Files</h3>
+    <button onclick="listFiles()">Refresh</button>
+    <ul id="fileList"></ul>
+</div>
+
+<!-- Delete -->
+<div class="box">
+    <h3>Delete File</h3>
+    <input id="deleteName" placeholder="Filename"><br>
+    <button onclick="deleteFile()">Delete</button>
+</div>
+
+<script>
+const SERVER = "http://localhost:8080";
+
+function upload() {
+    const file = document.getElementById("uploadFile").files[0];
+    if (!file) return alert("Select a file first");
+
+    fetch(SERVER + "/upload", {
+        method: "POST",
+        body: file
+    })
+    .then(r => r.text())
+    .then(t => document.getElementById("uploadStatus").innerText = t);
+}
+
+function listFiles() {
+    fetch(SERVER + "/list")
+    .then(r => r.json())
+    .then(files => {
+        const ul = document.getElementById("fileList");
+        ul.innerHTML = "";
+        files.forEach(f => {
+            let li = document.createElement("li");
+            li.innerHTML = `${f}
+                <button onclick="download('${f}')">Download</button>`;
+            ul.appendChild(li);
+        });
+    });
+}
+
+function download(name) {
+    window.location = SERVER + "/download?file=" + encodeURIComponent(name);
+}
+
+function deleteFile() {
+    let name = document.getElementById("deleteName").value;
+    fetch(SERVER + "/delete", {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: name
+    })
+    .then(r => r.text())
+    .then(alert);
+}
+</script>
+
+</body>
+</html>
